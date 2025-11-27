@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { InterviewType } from "@/public/services/Constants";
+import { InterviewType } from "@/lib/services/Constants";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 

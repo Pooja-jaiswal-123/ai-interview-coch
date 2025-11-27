@@ -12,7 +12,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* SIDEBAR */}
       <AppSidebar />
-
+      
       {/* MAIN WRAPPER */}
       <div className="flex w-full">
 

@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { SideBarOption } from "@/public/services/Constants";
+import { SideBarOption } from "@/lib/services/Constants";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
