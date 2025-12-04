@@ -39,9 +39,7 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
         <Input
           placeholder="e.g. Full Stack Developer"
           className="mt-2"
-          onChange={(e) =>
-            onHandleInputChange?.("jobPosition", e.target.value)
-          }
+          onChange={(e) => onHandleInputChange?.("jobPosition", e.target.value)}
         />
       </div>
 

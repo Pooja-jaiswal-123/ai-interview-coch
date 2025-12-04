@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/services/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 const Login = () => {
   const signInWithGoogle = async () => {

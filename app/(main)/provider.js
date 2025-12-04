@@ -1,5 +1,6 @@
 import React from 'react'
 
+
 const DashboardProvider = ({ children }) => {
   return (
     <div className="min-h-screen w-full bg-[#F4F6FA]">
