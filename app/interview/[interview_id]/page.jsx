@@ -1,14 +1,14 @@
 "use client";
 
+import React, { useContext, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { InterviewDataContext } from "@/context/interviewDataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Info, Clock, Video, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-import { InterviewDataContext } from "@/context/interviewDataContext";
 
 const Interview = () => {
   const { interview_id } = useParams();
@@ -16,77 +16,78 @@ const Interview = () => {
 
   const [interviewDetails, setInterviewDetails] = useState(null);
   const [userName, setUserName] = useState("");
-
   const [loadingPage, setLoadingPage] = useState(true);
   const [loadingButton, setLoadingButton] = useState(false);
 
   const { setInterviewInfo } = useContext(InterviewDataContext);
 
-  // ---------------------------
-  // FETCH INTERVIEW BASIC DETAILS
-  // ---------------------------
+  // Fetch interview details
   useEffect(() => {
-    if (interview_id) fetchInterviewDetails();
-  }, [interview_id]);
+    if (!interview_id) return;
 
-  const fetchInterviewDetails = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("interviews")
-        .select("jobPosition, jobDescription, duration, interviewType")
-        .eq("interview_id", interview_id)
-        .single();
+    const fetchInterviewDetails = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("interviews")
+          .select(
+            "jobPosition, jobDescription, duration, interviewType, questionList"
+          )
+          .eq("interview_id", interview_id)
+          .single();
 
-      if (error || !data) {
-        toast.error("Invalid or expired interview link");
-        router.push("/404");
-        return;
+        if (error || !data) {
+          toast.error("Invalid or expired interview link");
+          router.push("/404");
+          return;
+        }
+
+        setInterviewDetails(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Something went wrong!");
+      } finally {
+        setLoadingPage(false);
       }
+    };
 
-      setInterviewDetails(data);
-    } catch (e) {
-      toast.error("Something went wrong!");
-    } finally {
-      setLoadingPage(false);
-    }
-  };
+    fetchInterviewDetails();
+  }, [interview_id, router]);
 
-  // ---------------------------
-  // START INTERVIEW
-  // ---------------------------
+  // Start interview
   const handleStartInterview = async () => {
+    if (!userName.trim()) {
+      toast.error("Please enter your full name!");
+      return;
+    }
+
     setLoadingButton(true);
 
     try {
       const { data, error } = await supabase
         .from("interviews")
-        .select("*, questions(*)") // Fetch questions also
+        .select("*")
         .eq("interview_id", interview_id)
         .single();
 
       if (error || !data) {
-        toast.error("Something went wrong!");
+        console.error(error);
+        toast.error("Failed to fetch interview!");
         setLoadingButton(false);
         return;
       }
 
-      // Save data globally for next pages
-      setInterviewInfo(data);
-
-      // -------------------------------
-      // Console Logs for checking
-      // -------------------------------
-      console.log("🟦 Username:", userName);
-      console.log("🟩 Total Questions:", data?.questions?.length);
-      console.log("🟨 Questions List:", data?.questions);
+      setInterviewInfo({
+        ...data,
+        userName: userName.trim(),
+      });
 
       router.push(`/interview/${interview_id}/start`);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       toast.error("Unable to start interview!");
+    } finally {
+      setLoadingButton(false);
     }
-
-    setLoadingButton(false);
   };
 
   return (
@@ -94,7 +95,7 @@ const Interview = () => {
       <div className="w-full max-w-3xl bg-white rounded-xl p-6 shadow-md">
         {/* Logo */}
         <div className="flex flex-col items-center">
-          <Image src={"/logo.png"} alt="Logo" width={150} height={70} />
+          <Image src="/logo.png" alt="Logo" width={150} height={70} />
           <h2 className="text-gray-600 font-medium text-xs md:text-sm">
             AI-Powered Interview Platform
           </h2>
@@ -103,7 +104,7 @@ const Interview = () => {
         {/* Illustration */}
         <div className="flex justify-center mt-3">
           <Image
-            src={"/interview.png"}
+            src="/interview.png"
             alt="interview"
             width={300}
             height={300}
@@ -111,7 +112,7 @@ const Interview = () => {
           />
         </div>
 
-        {/* Title */}
+        {/* Job Title */}
         <h2 className="font-bold text-lg md:text-xl text-center mt-3">
           {loadingPage ? "Loading..." : interviewDetails?.jobPosition}
         </h2>
