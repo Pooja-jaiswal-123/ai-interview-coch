@@ -76,9 +76,11 @@ const Interview = () => {
         return;
       }
 
+      // FIXED STRUCTURE (Very Important)
       setInterviewInfo({
-        ...data,
         userName: userName.trim(),
+        interviewData: data,
+        questionList: data.questionList || [], // Always guaranteed
       });
 
       router.push(`/interview/${interview_id}/start`);

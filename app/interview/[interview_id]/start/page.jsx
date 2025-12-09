@@ -11,7 +11,7 @@ const StartInterview = () => {
   const { interviewInfo } = useContext(InterviewDataContext);
   const [time, setTime] = useState(0);
 
-  // ---- FIX #1: Create VAPI instance only once ----
+  // Create VAPI instance only once
   const vapiRef = useRef(null);
   if (!vapiRef.current) {
     console.log("Initializing Vapi Instance...");
@@ -19,7 +19,7 @@ const StartInterview = () => {
   }
   const vapi = vapiRef.current;
 
-  // ---- FIX #2: Unlock audio autoplay ----
+  // Unlock autoplay
   const unlockAudioAutoplay = () => {
     const audio = document.createElement("audio");
     audio.src = "";
@@ -48,34 +48,43 @@ const StartInterview = () => {
       return;
     }
 
-    // ---- FIX #3: Format Question List properly ----
     const questionList = questions
       .map((q, i) => `${i + 1}. ${q?.question}`)
       .join("\n");
 
-    console.log("Formatted Questions:", questionList);
-
-    // ---- FIX #4: First message + Instructions clean ----
+    // ⭐⭐ SCREENSHOT WALA EXACT PROMPT ⭐⭐
     const assistantOptions = {
-      model: "gpt-4o-mini-tts",
-      voice: "verse",
+      model: "gpt-4o-mini",
+      voice: {
+        provider: "vapi",
+        voice_id: "verse",
+      },
       instructions: `
-You are an AI Technical Interviewer.
+You are an experienced AI interviewer.  
+Ask questions naturally, one at a time, based on the candidate's CV and job role.  
+Never ask multiple questions together.  
+Wait for the candidate's full reply before asking the next question.  
+Speak in a friendly, encouraging tone.  
+If the user takes long pauses, politely continue.  
+If they are confused, give a small hint, not the full answer.  
+Do not speak too fast.  
+Keep responses short and conversational.
 
-Ask ONLY ONE question at a time.
-Wait for candidate reply before going to the next.
-Keep your tone friendly and short.
-If user is stuck, give a small hint.
-DO NOT ask more than one question in a single message.
+Start with:  
+"Hi ${interviewInfo?.userName}, welcome to your ${interviewInfo?.interviewData?.jobPosition} interview. Let's begin!"
 
-Start with:
-"Hi ${interviewInfo?.userName}, welcome to your ${interviewInfo?.interviewData?.jobPosition} interview!"
-
-Here are the interview questions:
+Here are the questions you must ask in order:
 ${questionList}
 
-After finishing all questions:
-Give a short evaluation and close the interview.
+After finishing all questions:  
+Give a short evaluation including:  
+• Strengths  
+• Weak areas  
+• Overall confidence level  
+• Final score out of 10  
+
+Then end with:  
+"Thank you for attending your mock interview. Good luck!"
 `.trim(),
     };
 
@@ -92,7 +101,6 @@ Give a short evaluation and close the interview.
 
       console.log("🟢 VAPI Started Successfully!");
 
-      // --- FIX #5: Add events for debugging ---
       vapi.on("speech-start", () => console.log("🗣 Speaking..."));
       vapi.on("speech-end", () => console.log("🔇 Speech End"));
       vapi.on("error", (err) => console.error("❌ Vapi Error:", err));

@@ -1,22 +1,72 @@
 "use client";
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation"; // Next.js router
 
 const Login = () => {
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
+  const router = useRouter(); // router initialize
 
-    if (error) {
-      console.error("Error:", error.message);
+  const signInWithGoogle = async () => {
+    try {
+      // 1️⃣ Sign in with Google
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/home", // login ke baad redirect to /home
+        },
+      });
+
+      if (error) {
+        console.error("Login Error:", error.message);
+        return;
+      }
+
+      // 2️⃣ Get user info
+      const user = data.user;
+      if (!user) return;
+
+      // 3️⃣ Check if user already exists in 'users' table
+      const { data: existingUser, error: fetchError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Fetch Error:", fetchError.message);
+        return;
+      }
+
+      // 4️⃣ If user doesn't exist, insert new user
+      if (!existingUser) {
+        const { error: insertError } = await supabase.from("users").insert([
+          {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata.full_name,
+            avatar: user.user_metadata.avatar_url,
+          },
+        ]);
+
+        if (insertError) {
+          console.error("Insert Error:", insertError.message);
+        } else {
+          console.log("New user saved in Supabase!");
+        }
+      }
+
+      // 5️⃣ Redirect to /home (dashboard page)
+      router.push("/home");
+    } catch (err) {
+      console.error("Unexpected Error:", err);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="flex flex-col items-center border rounded-2xl p-8">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+      <div className="flex flex-col items-center border rounded-2xl p-8 bg-white shadow-lg">
         <img
           src={"/logo.png"}
           alt="Logo"
@@ -24,7 +74,7 @@ const Login = () => {
           height={100}
           className="w-[180px]"
         />
-        <div className="flex items-center flex-col">
+        <div className="flex items-center flex-col mt-5">
           <img
             src={"/login.png"}
             alt="Login"
@@ -35,11 +85,10 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-center mt-5">
             Welcome to HireMate AI
           </h2>
-          <p className="text-gray-500 text-center">
+          <p className="text-gray-500 text-center mt-2">
             Sign in with Google Authentication
           </p>
 
-          {/* ✅ Added onClick event */}
           <Button onClick={signInWithGoogle} className="mt-7 w-full">
             Login with Google
           </Button>
