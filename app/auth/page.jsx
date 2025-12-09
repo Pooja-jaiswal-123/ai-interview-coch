@@ -3,18 +3,18 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation"; // Next.js router
+import { useRouter } from "next/navigation";
 
 const Login = () => {
-  const router = useRouter(); // router initialize
+  const router = useRouter();
 
   const signInWithGoogle = async () => {
     try {
-      // 1️⃣ Sign in with Google
+      // ✅ Sign in using popup to avoid full page reload
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + "/home", // login ke baad redirect to /home
+          flowType: "popup", // popup login
         },
       });
 
@@ -23,11 +23,10 @@ const Login = () => {
         return;
       }
 
-      // 2️⃣ Get user info
       const user = data.user;
       if (!user) return;
 
-      // 3️⃣ Check if user already exists in 'users' table
+      // ✅ Check if user already exists in 'users' table
       const { data: existingUser, error: fetchError } = await supabase
         .from("users")
         .select("*")
@@ -39,7 +38,7 @@ const Login = () => {
         return;
       }
 
-      // 4️⃣ If user doesn't exist, insert new user
+      // ✅ Insert new user if not exists
       if (!existingUser) {
         const { error: insertError } = await supabase.from("users").insert([
           {
@@ -52,12 +51,13 @@ const Login = () => {
 
         if (insertError) {
           console.error("Insert Error:", insertError.message);
-        } else {
-          console.log("New user saved in Supabase!");
+          return;
         }
+
+        console.log("New user saved in Supabase!");
       }
 
-      // 5️⃣ Redirect to /home (dashboard page)
+      // ✅ Redirect to dashboard after login
       router.push("/home");
     } catch (err) {
       console.error("Unexpected Error:", err);
