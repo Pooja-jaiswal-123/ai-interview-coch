@@ -11,15 +11,15 @@ const StartInterview = () => {
   const { interviewInfo } = useContext(InterviewDataContext);
   const [time, setTime] = useState(0);
 
-  // Create VAPI instance only once
-  const vapiRef = useRef(null);
-  if (!vapiRef.current) {
-    console.log("Initializing Vapi Instance...");
-    vapiRef.current = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
-  }
+  // Create VAPI instance only ONCE
+  const vapiRef = useRef(
+    new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "YOUR_PUBLIC_KEY_HERE")
+  );
   const vapi = vapiRef.current;
 
-  // Unlock autoplay
+  const interviewStarted = useRef(false);
+
+  // Unlock autoplay audio (Fixes browser audio blocking)
   const unlockAudioAutoplay = () => {
     const audio = document.createElement("audio");
     audio.src = "";
@@ -29,15 +29,16 @@ const StartInterview = () => {
   useEffect(() => {
     console.log("InterviewInfo Changed:", interviewInfo);
 
-    if (interviewInfo?.interviewData?.questionList?.length > 0) {
+    if (
+      interviewInfo?.interviewData?.questionList?.length > 0 &&
+      !interviewStarted.current
+    ) {
+      interviewStarted.current = true; // avoid double trigger
       console.log("Questions found → Starting Interview...");
       startInterview();
     }
 
-    const timer = setInterval(() => {
-      setTime((prev) => prev + 1);
-    }, 1000);
-
+    const timer = setInterval(() => setTime((prev) => prev + 1), 1000);
     return () => clearInterval(timer);
   }, [interviewInfo]);
 
@@ -52,40 +53,42 @@ const StartInterview = () => {
       .map((q, i) => `${i + 1}. ${q?.question}`)
       .join("\n");
 
-    // ⭐⭐ SCREENSHOT WALA EXACT PROMPT ⭐⭐
+    // ✅ FIXED: Correct Vapi Ephemeral Assistant Structure
     const assistantOptions = {
-      model: "gpt-4o-mini",
+      name: "Interviewer",
+      firstMessage: `Hi ${interviewInfo?.userName}, welcome to your ${interviewInfo?.interviewData?.jobPosition} interview. Let's begin!`,
+
+      // 1. Voice Settings (Using 11Labs for high quality male voice)
       voice: {
-        provider: "vapi",
-        voice_id: "verse",
+        provider: "11labs",
+        voiceId: "burt", // 'burt' is a standard male voice ID in 11Labs
       },
-      instructions: `
-You are an experienced AI interviewer.  
-Ask questions naturally, one at a time, based on the candidate's CV and job role.  
-Never ask multiple questions together.  
-Wait for the candidate's full reply before asking the next question.  
-Speak in a friendly, encouraging tone.  
-If the user takes long pauses, politely continue.  
-If they are confused, give a small hint, not the full answer.  
-Do not speak too fast.  
-Keep responses short and conversational.
 
-Start with:  
-"Hi ${interviewInfo?.userName}, welcome to your ${interviewInfo?.interviewData?.jobPosition} interview. Let's begin!"
+      // 2. Model Settings (Instructions go inside 'system' message)
+      model: {
+        provider: "openai",
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `
+              You are an experienced male interviewer. 
+              Ask one question at a time in a natural conversation tone.
+              Wait for user reply before asking next question.
+              Don't speak too fast, keep the voice realistic and friendly.
 
-Here are the questions you must ask in order:
-${questionList}
+              Here are the questions:
+              ${questionList}
 
-After finishing all questions:  
-Give a short evaluation including:  
-• Strengths  
-• Weak areas  
-• Overall confidence level  
-• Final score out of 10  
+              After finishing all questions:
+              Give a short evaluation including strengths, weak areas, confidence level and a score out of 10.
 
-Then end with:  
-"Thank you for attending your mock interview. Good luck!"
-`.trim(),
+              End with:
+              "Thank you for attending your mock interview. All the best!"
+            `,
+          },
+        ],
+      },
     };
 
     try {
@@ -97,16 +100,24 @@ Then end with:
       unlockAudioAutoplay();
 
       console.log("Starting VAPI assistant...");
-      await vapi.start({ assistant: assistantOptions });
+
+      // ✅ Correct call format
+      await vapi.start(assistantOptions);
 
       console.log("🟢 VAPI Started Successfully!");
 
       vapi.on("speech-start", () => console.log("🗣 Speaking..."));
       vapi.on("speech-end", () => console.log("🔇 Speech End"));
       vapi.on("error", (err) => console.error("❌ Vapi Error:", err));
+
+      // Optional: Add event listener for call end
+      vapi.on("call-end", () => {
+        console.log("Call ended.");
+        stopInterview();
+      });
     } catch (error) {
       console.error("❌ Mic permission or VAPI start error:", error);
-      alert("Mic permission allow karo Pooja! Reload page.");
+      alert("Mic permission error or API config issue. Check console.");
     }
   };
 
@@ -158,7 +169,7 @@ Then end with:
       <div className="flex items-center gap-5 justify-center mt-7">
         <Mic className="h-12 w-12 p-3 bg-gray-500 text-white rounded-full cursor-pointer" />
 
-        <AlertConfirmation stopInterview={() => stopInterview()}>
+        <AlertConfirmation stopInterview={stopInterview}>
           <Phone className="h-12 w-12 p-3 bg-red-500 text-white rounded-full cursor-pointer" />
         </AlertConfirmation>
       </div>

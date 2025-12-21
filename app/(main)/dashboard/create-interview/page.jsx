@@ -3,7 +3,7 @@
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react"; // ✅ Import useCallback
 import FormContainer from "./_components/FormContainer";
 import QuestionList from "./_components/QuestionList";
 import { toast } from "sonner";
@@ -12,8 +12,8 @@ import InterviewLink from "./_components/InterviewLink";
 const CreateInterview = () => {
   const router = useRouter();
 
-  const [step, setStep] = useState(1); // 🔹 Step control: 1=Form, 2=Questions, 3=Link
-  const [interview_id, setInterview_id] = useState(); // 🔹 Store generated interview ID
+  const [step, setStep] = useState(1);
+  const [interview_id, setInterview_id] = useState();
   const [formData, setFormData] = useState({
     jobPosition: "",
     jobDescription: "",
@@ -21,20 +21,25 @@ const CreateInterview = () => {
     interviewType: [],
   });
 
-  // 🔹 Update form fields safely
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    console.log("Updated form data:", { ...formData, [field]: value });
-  };
+  // ✅ CRITICAL FIX: Wrapped in useCallback to prevent Infinite Loop
+  const handleInputChange = useCallback((field, value) => {
+    setFormData((prev) => {
+      // Optimization: If value hasn't changed, don't update state
+      if (prev[field] === value) return prev;
+
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
+    // Removed console.log to prevent console spam during typing
+  }, []);
 
   // 🔹 Step 1 validation before going to Step 2
   const handleNextStep = () => {
     if (
-      !formData.jobPosition.trim() ||
-      !formData.jobDescription.trim() ||
+      !formData.jobPosition?.trim() ||
+      !formData.jobDescription?.trim() ||
       !formData.duration ||
       formData.interviewType.length === 0
     ) {

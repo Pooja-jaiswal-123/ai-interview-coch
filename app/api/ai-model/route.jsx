@@ -32,10 +32,11 @@ Type: ${type}
     });
 
     const completion = await client.chat.completions.create({
-      model: "openai/gpt-4.1-mini",
+      // ✅ CHANGE 1: Using a FREE model to fix 402 Payment Error
+      model: "google/gemini-2.0-flash-exp:free",
       messages: [{ role: "user", content: FINAL_PROMPT }],
       temperature: 0.4,
-      max_tokens: 1000, // Reduce tokens to fit your account limit
+      max_tokens: 1000,
     });
 
     let responseText = completion.choices[0].message.content;
@@ -60,7 +61,7 @@ Type: ${type}
       return NextResponse.json(
         {
           error:
-            "⚠️ Not enough credits. Reduce max_tokens or upgrade your OpenRouter account.",
+            "⚠️ Credits Expired. Using a free model like 'google/gemini-2.0-flash-exp:free' is recommended.",
         },
         { status: 402 }
       );

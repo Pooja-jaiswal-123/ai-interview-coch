@@ -16,26 +16,32 @@ import { ArrowRight } from "lucide-react";
 const FormContainer = ({ onHandleInputChange, GoToNext }) => {
   const [selectedTypes, setSelectedTypes] = useState([]);
 
+  // ✅ FIX: Calculate Logic First, Then Update State & Parent
   const handleInterviewTypeClick = (type) => {
-    setSelectedTypes((prev) => {
-      let newSelection;
+    // 1. Calculate what the new selection will be
+    const isAlreadySelected = selectedTypes.includes(type.title);
+    let newSelection;
 
-      if (prev.includes(type.title)) {
-        newSelection = prev.filter((t) => t !== type.title);
-      } else {
-        newSelection = [...prev, type.title];
-      }
+    if (isAlreadySelected) {
+      newSelection = selectedTypes.filter((t) => t !== type.title);
+    } else {
+      newSelection = [...selectedTypes, type.title];
+    }
 
-      onHandleInputChange?.("interviewType", newSelection);
-      return newSelection;
-    });
+    // 2. Update Local State
+    setSelectedTypes(newSelection);
+
+    // 3. Update Parent State (Safe execution)
+    if (onHandleInputChange) {
+      onHandleInputChange("interviewType", newSelection);
+    }
   };
 
   return (
-    <div className="p-5 bg-white rounded-2xl">
+    <div className="p-5 bg-white rounded-2xl border shadow-sm">
       {/* Job Position */}
       <div>
-        <h2 className="text-sm font-medium">Job Position</h2>
+        <h2 className="text-sm font-medium text-gray-700">Job Position</h2>
         <Input
           placeholder="e.g. Full Stack Developer"
           className="mt-2"
@@ -45,10 +51,10 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
 
       {/* Job Description */}
       <div className="mt-4">
-        <h2 className="text-sm font-medium">Job Description</h2>
+        <h2 className="text-sm font-medium text-gray-700">Job Description</h2>
         <Textarea
-          placeholder="Enter detailed job description"
-          className="h-[200px] mt-2"
+          placeholder="Enter detailed job description, tech stack, and requirements..."
+          className="h-[150px] mt-2 resize-none"
           onChange={(e) =>
             onHandleInputChange?.("jobDescription", e.target.value)
           }
@@ -57,7 +63,9 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
 
       {/* Interview Duration */}
       <div className="mt-5">
-        <h2 className="text-sm font-medium">Interview Duration</h2>
+        <h2 className="text-sm font-medium text-gray-700">
+          Interview Duration
+        </h2>
         <Select
           onValueChange={(value) => onHandleInputChange?.("duration", value)}
         >
@@ -76,7 +84,7 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
 
       {/* Interview Type */}
       <div className="mt-5">
-        <h2 className="text-sm font-semibold">Interview Type</h2>
+        <h2 className="text-sm font-semibold text-gray-700">Interview Type</h2>
 
         <div className="flex gap-4 flex-wrap mt-3">
           {InterviewType.map((type, index) => {
@@ -86,20 +94,17 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
               <div
                 key={index}
                 onClick={() => handleInterviewTypeClick(type)}
-                className={`flex items-center gap-3 cursor-pointer p-3 px-4 rounded-2xl border transition-all shadow-sm
+                className={`flex items-center gap-3 cursor-pointer p-3 px-4 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md
                   ${
                     isSelected
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white border-gray-300 hover:bg-gray-100"
+                      ? "bg-primary text-white border-primary ring-2 ring-primary ring-offset-1"
+                      : "bg-white border-gray-200 hover:bg-gray-50 text-gray-600"
                   }
                 `}
               >
-                <type.icon
-                  className={`h-5 w-5 ${
-                    isSelected ? "text-white" : "text-gray-700"
-                  }`}
-                />
-                <span className="text-base font-medium">{type.title}</span>
+                {/* Render Icon if it exists */}
+                {type.icon && <type.icon className="h-5 w-5" />}
+                <span className="text-sm font-medium">{type.title}</span>
               </div>
             );
           })}
@@ -107,12 +112,13 @@ const FormContainer = ({ onHandleInputChange, GoToNext }) => {
       </div>
 
       {/* Button */}
-      <div className="mt-10 flex justify-end">
+      <div className="mt-8 flex justify-end">
         <Button
           className="cursor-pointer flex items-center gap-2"
           onClick={GoToNext}
+          disabled={selectedTypes.length === 0} // Optional: Disable if no type selected
         >
-          Generate Question <ArrowRight />
+          Generate Question <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </div>
