@@ -1,7 +1,11 @@
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
-import Provider from "./provider";   // 👈 IMPORTANT LINE!
+import Provider from "./provider"; 
 import { Toaster } from "@/components/ui/sonner";
+
+// 👇 1. Sidebar Import karein (Apna sahi path check karein)
+import AppSidebar from "@/components-main/AppSidebar"; 
+// Agar file "components" folder mein hai to: import AppSidebar from "@/components/AppSidebar";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -22,8 +26,30 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${robotoMono.variable} antialiased`}>
-        <Provider>     {/* 👈 Wrap children */}
-          {children}
+        <Provider>
+          
+          <div className="flex min-h-screen bg-[#FDFDFF]">
+            
+            {/* Sidebar fixed width w-72 */}
+            <AppSidebar />
+            
+            {/* Main Content:
+                1. md:ml-72 -> Sidebar ki exact width.
+                2. p-0 -> Hum internal padding content ke andar sambhalenge.
+            */}
+            <main className="flex-1 md:ml-72 min-h-screen transition-all">
+              
+              {/* Content Wrapper: 
+                  - Yahan 'w-full' use kiya hai taaki gap na bache.
+                  - 'px-6 py-8' standard gap dega jo satega nahi par door bhi nahi lagega.
+              */}
+              <div className="w-full px-6 py-8 md:px-10">
+                {children}
+              </div>
+              
+            </main>
+          </div>
+          
           <Toaster/>
         </Provider>
       </body>
