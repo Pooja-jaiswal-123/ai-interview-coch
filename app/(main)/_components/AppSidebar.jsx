@@ -20,7 +20,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="flex flex-col items-center mt-5">
+      <SidebarHeader className="flex flex-col bg-red-400 items-center mt-5">
         <img
           src={"/logo.png"}
           alt="logo"

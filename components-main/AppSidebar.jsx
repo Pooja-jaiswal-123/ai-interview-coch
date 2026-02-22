@@ -27,7 +27,8 @@ const AppSidebar = () => {
 
   const menuItems = [
     { label: "Dashboard", icon: <Home className="w-5 h-5" />, href: "/dashboard/analytics" },
-    { label: "Interview Prep", icon: <MessageSquare className="w-5 h-5" />, href: "/dashboard" },
+    // Line 30 in image_98277a.png
+{ label: "Interview Prep", icon: <MessageSquare className="w-5 h-5" />,href: "/interview" },
     { label: "Resume Builder", icon: <FileText className="w-5 h-5" />, href: "/resume" },
     { label: "Resume Analyzer", icon: <Search className="w-5 h-5" />, href: "/resume/analyze" },
     { label: "Career Roadmap", icon: <Map className="w-5 h-5" />, href: "/roadmap" },

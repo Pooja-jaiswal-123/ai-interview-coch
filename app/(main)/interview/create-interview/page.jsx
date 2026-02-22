@@ -4,10 +4,10 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback } from "react"; // ✅ Import useCallback
-import FormContainer from "./_components/FormContainer";
-import QuestionList from "./_components/QuestionList";
+import FormContainer from "../../interview/_components/FormContainer";
+import QuestionList from "../../interview/_components/QuestionList";
 import { toast } from "sonner";
-import InterviewLink from "./_components/InterviewLink";
+import InterviewLink from "../../interview/_components/InterviewLink";
 
 const CreateInterview = () => {
   const router = useRouter();
