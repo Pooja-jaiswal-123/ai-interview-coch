@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -11,127 +12,123 @@ import { supabase } from "@/lib/supabaseClient";
 
 const QuestionList = ({ formData, onCreateLink }) => {
   const [loading, setLoading] = useState(false);
-  const [questionList, setQuestionList] = useState(null);
+  const [questionList, setQuestionList] = useState([]);
   const { user } = useUser();
   const [saveLoading, setSaveLoading] = useState(false);
+  const [generatedId, setGeneratedId] = useState(null);
 
-  const [generatedId, setGeneratedId] = useState(null); // ⬅️ NEW
-
+  // ✅ generate questions
   useEffect(() => {
-    if (formData) generateQuestionList();
+    if (!formData?.jobPosition) return;
+    generateQuestionList();
   }, [formData]);
 
   const generateQuestionList = async () => {
-    setLoading(true);
     try {
-      const result = await axios.post("/api/ai-model", { ...formData });
+      setLoading(true);
 
-      const content = JSON.parse(result.data.result);
-      const questionsArray = Array.isArray(content.questions)
-        ? content.questions
-        : [];
+      const result = await axios.post("/api/ai-model", formData);
+
+      console.log("API RESPONSE:", result.data);
+
+      // ✅ FIXED (NO JSON.parse)
+      const questionsArray = result.data.questions || [];
 
       setQuestionList(questionsArray);
+
       toast.success("Questions Generated Successfully!");
     } catch (error) {
+      console.error(error);
       toast.error("⚠️ Server Error, Try Again!");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  // ✅ SAVE INTERVIEW
   const onFinish = async () => {
     setSaveLoading(true);
 
-    if (!questionList || questionList.length === 0) {
+    if (!questionList.length) {
       toast.error("No questions to save!");
       setSaveLoading(false);
       return;
     }
 
-    const interview_id = uuidv4(); // ⬅️ SAME ID FROM DB & UI
+    const interview_id = uuidv4();
     setGeneratedId(interview_id);
 
     const payload = {
-      jobPosition: formData.jobPosition || "",
-      jobDescription: formData.jobDescription || "",
-      duration: formData.duration?.toString() || "0",
+      jobPosition: formData.jobPosition,
+      jobDescription: formData.jobDescription,
+      duration: formData.duration.toString(),
       interviewType: Array.isArray(formData.interviewType)
         ? formData.interviewType.join(", ")
-        : formData.interviewType || "",
-      questionList: questionList,
-      userEmail: user?.email || "no-email@example.com",
+        : formData.interviewType,
+      questionList,
+      userEmail: user?.email || "",
       interview_id,
     };
 
-    const { error } = await supabase.from("interviews").insert([payload]);
+    const { error } = await supabase
+      .from("interviews")
+      .insert([payload]);
 
     if (error) {
       toast.error("Error saving interview!");
     } else {
       toast.success("Interview saved successfully!");
-      setQuestionList(null);
+      onCreateLink(interview_id);
     }
 
     setSaveLoading(false);
-
-    onCreateLink(interview_id);
   };
 
   const copyLink = () => {
-    const link = `${process.env.NEXT_PUBLIC_HOST_URL}/${generatedId}`;
+    const link = `${process.env.NEXT_PUBLIC_HOST_URL}/interview/${generatedId}`;
     navigator.clipboard.writeText(link);
     toast.success("Interview link copied!");
   };
 
   return (
     <div>
-      {/* Loading while AI generates questions */}
+      {/* LOADING */}
       {loading && (
-        <div className="p-5 bg-blue-50 rounded-xl border border-primary flex gap-5 items-center">
+        <div className="p-5 bg-blue-50 rounded-xl flex gap-5 items-center">
           <Loader2 className="animate-spin" />
           <div>
-            <h1 className="font-medium">Generating Interview Questions...</h1>
-            <p className="text-sm text-primary">
-              Our AI is crafting personalized questions based on your job
-              details.
-            </p>
+            <h1 className="font-medium">
+              Generating Interview Questions...
+            </h1>
           </div>
         </div>
       )}
 
-      {/* Show Questions */}
-      {!loading && questionList && questionList.length > 0 && (
-        <div className="mt-5 p-5 bg-white rounded-xl shadow-md border">
+      {/* QUESTIONS */}
+      {!loading && questionList.length > 0 && (
+        <div className="mt-5 p-5 bg-white rounded-xl shadow border">
           <QuestionListContainer questionlist={questionList} />
         </div>
       )}
 
-      {/* Finish Button */}
+      {/* FINISH BUTTON */}
       <div className="mt-5 flex justify-end">
         <Button onClick={onFinish} disabled={saveLoading}>
-          {saveLoading && <Loader2 className="animate-spin mr-2" />}
+          {saveLoading && (
+            <Loader2 className="animate-spin mr-2" />
+          )}
           Create Interview Link & Finish
         </Button>
       </div>
 
-      {/* Show Interview ID + Link */}
+      {/* LINK */}
       {generatedId && (
-        <div className="mt-5 p-4 bg-gray-100 rounded-xl border shadow-sm">
-          <h3 className="font-semibold text-lg">Interview Link Created!</h3>
-
-          <p className="mt-2 text-sm">
+        <div className="mt-5 p-4 bg-gray-100 rounded-xl border">
+          <p>
             <strong>Interview ID:</strong> {generatedId}
           </p>
 
-          <p className="mt-1 text-sm break-all">
-            <strong>Link:</strong>{" "}
-            {`${process.env.NEXT_PUBLIC_HOST_URL}/${generatedId}`}
-          </p>
-
-          <Button
-            onClick={copyLink}
-            className="mt-3 flex items-center gap-2 w-full sm:w-auto"
-          >
+          <Button onClick={copyLink} className="mt-3">
             <Copy size={16} /> Copy Link
           </Button>
         </div>
