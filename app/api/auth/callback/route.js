@@ -1,19 +1,25 @@
+// app/api/auth/callback/route.js
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-export async function GET(request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
+export async function GET(req) {
+  const url = new URL(req.url);
+  const code = url.searchParams.get('code');
+
+  const res = NextResponse.redirect(new URL('/', req.url));
 
   if (code) {
-    const cookieStore = await cookies(); 
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-    
-    // Code ko session mein badal kar cookies set karega
-    await supabase.auth.exchangeCodeForSession(code);
+    const supabase = createRouteHandlerClient({ cookies });
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error('Exchange Code Error:', error);
+      return NextResponse.redirect(new URL('/auth', req.url));
+    }
+
+    console.log('Session created:', data.session);
   }
 
-  // ✅ Ab ye user ko seedha home page (root) par bhej dega
-  return NextResponse.redirect(new URL('/', request.url));
+  return res;
 }

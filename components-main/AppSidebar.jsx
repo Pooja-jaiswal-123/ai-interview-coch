@@ -87,7 +87,7 @@ const AppSidebar = () => {
           <div className="pt-4 mt-4 border-t border-gray-100">
               <p className="text-[10px] font-bold text-gray-400 px-3 mb-3 uppercase tracking-[0.2em]">Assistant</p>
               
-              <Link href="/dashboard/chat">
+              <Link href="/ai-assistent" className="block">
                   <div className="relative rounded-[18px] overflow-hidden group cursor-pointer p-[3px] transition-all active:scale-[0.98]">
                       <div className="absolute inset-[-400%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,#3b82f6,#8b5cf6,#ec4899,#3b82f6)] opacity-100 blur-xl" />
                       <div className="relative z-10 bg-slate-950 rounded-[15px] p-3.5 flex items-center gap-4">
