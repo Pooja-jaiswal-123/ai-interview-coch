@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/sidebar";
 import { SideBarOption } from "@/lib/services/Constants";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus } from "lucide-react"; // <-- Yahan se LayoutTextQuote hata diya hai
 import { usePathname } from "next/navigation";
 
 export function AppSidebar() {
-  const pathname = usePathname(); // ✅ Correct current route
+  const pathname = usePathname();
 
   return (
     <Sidebar>
@@ -31,9 +31,9 @@ export function AppSidebar() {
 
         <button
           className="w-full mt-5 flex items-center justify-center gap-2 
-                     bg-primary text-primary-foreground 
-                     py-2 px-3 rounded-md 
-                     hover:bg-primary/90 transition"
+                      bg-primary text-primary-foreground 
+                      py-2 px-3 rounded-md 
+                      hover:bg-primary/90 transition"
         >
           <Plus size={18} />
           Create New Interview
@@ -43,34 +43,28 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
+            {/* Pehle loop wale items */}
             {SideBarOption.map((Option, index) => (
               <SidebarMenuItem key={index} className="p-1">
                 <SidebarMenuButton
                   asChild
-                  className={`p-5 
-                    ${
-                      pathname === Option.path
-                        ? "bg-blue-50" // ✅ Active background highlight
-                        : ""
-                    }
-                  `}
+                  className={`p-5 ${
+                    pathname === Option.path ? "bg-blue-50" : ""
+                  }`}
                 >
                   <Link href={Option.path} className="flex items-center gap-2">
-                    {/* ICON COLOR FIX */}
                     <Option.icon
                       size={18}
                       className={
                         pathname === Option.path
-                          ? "text-primary" // Active icon color
+                          ? "text-primary"
                           : "text-gray-600"
                       }
                     />
-
-                    {/* TEXT COLOR FIX */}
                     <span
                       className={`text-[16px] ${
                         pathname === Option.path
-                          ? "text-primary" // Active text color
+                          ? "text-primary font-semibold"
                           : "text-gray-700"
                       }`}
                     >
