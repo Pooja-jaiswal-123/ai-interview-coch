@@ -1,15 +1,24 @@
 "use client";
 
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
+=======
+import React, { useState, useEffect } from "react"; // useEffect add kiya
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Chrome, Loader2 } from "lucide-react";
+<<<<<<< HEAD
+=======
+import { toast } from "sonner"; // Feedback ke liye optional
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
 
 const Login = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+<<<<<<< HEAD
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -18,6 +27,47 @@ const Login = () => {
         }
       }
     );
+=======
+  // 1. Sync Logic ko alag function mein dala taaki har login pe chale
+  const syncUserToDatabase = async (user) => {
+    if (!user) return;
+
+    try {
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (!existingUser) {
+        await supabase.from("users").insert([
+          {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata.full_name,
+            avatar: user.user_metadata.avatar_url,
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Sync Error:", err);
+    }
+  };
+
+  // 2. Auth state change listen karein (Popup close hone ke baad ye trigger hoga)
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        setLoading(true);
+        await syncUserToDatabase(session.user);
+        setLoading(false);
+        router.push("/dashboard/analytics"); // Sidebar ke active state ke hisaab se redirect
+      }
+    });
+
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
     return () => subscription.unsubscribe();
   }, [router]);
 
@@ -27,10 +77,20 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+<<<<<<< HEAD
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
+=======
+          // 'popup' ki jagah default flow zyada stable hota hai Next.js mein
+          redirectTo: `${window.location.origin}/dashboard/analytics`,
+        },
+      });
+
+      if (error) throw error;
+      // Note: Redirect flow mein yahan ke baad code nahi chalega, useEffect handle karega
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
     } catch (err) {
       console.error("Login Error:", err);
       setLoading(false);
@@ -39,6 +99,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+<<<<<<< HEAD
+=======
+      {/* Background Decor */}
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-50" />
@@ -46,6 +110,7 @@ const Login = () => {
 
       <div className="relative w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-lg border border-gray-100 rounded-3xl shadow-2xl overflow-hidden">
+<<<<<<< HEAD
           <div className="p-8 pb-0 flex flex-col items-center">
             <div className="bg-blue-600 p-3 rounded-2xl mb-6 shadow-lg shadow-blue-200">
               <img src="/logo.png" alt="Logo" className="h-8 w-auto brightness-0 invert" />
@@ -55,6 +120,27 @@ const Login = () => {
             </div>
           </div>
 
+=======
+          {/* Top Section */}
+          <div className="p-8 pb-0 flex flex-col items-center">
+            <div className="bg-blue-600 p-3 rounded-2xl mb-6 shadow-lg shadow-blue-200">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-8 w-auto brightness-0 invert"
+              />
+            </div>
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-inner bg-gray-100 mb-8">
+              <img
+                src="/login.png"
+                alt="Login Illustration"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Text Content */}
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
           <div className="px-8 pb-10 text-center">
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
               Welcome to <span className="text-blue-600">AI Coach</span>
@@ -68,7 +154,15 @@ const Login = () => {
               disabled={loading}
               className="mt-8 w-full h-12 text-md font-semibold bg-gray-900 hover:bg-black text-white flex gap-3"
             >
+<<<<<<< HEAD
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Chrome className="w-5 h-5" />}
+=======
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Chrome className="w-5 h-5" />
+              )}
+>>>>>>> 02aeb65838fc0e6db005117bdc73ddbd1fc9df80
               {loading ? "Authenticating..." : "Continue with Google"}
             </Button>
 
