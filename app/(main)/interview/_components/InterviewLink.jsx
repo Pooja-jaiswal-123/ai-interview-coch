@@ -20,7 +20,7 @@ const InterviewLink = ({ interview_id, formData }) => {
   const [copied, setCopied] = useState(false);
 
   const GetInterviewUrl = () => {
-    return `${process.env.NEXT_PUBLIC_HOST_URL}/${interview_id}`;
+    return `${process.env.NEXT_PUBLIC_HOST_URL}/interview/${interview_id}`;
   };
 
   const handleCopy = () => {
